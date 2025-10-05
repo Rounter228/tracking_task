@@ -1,0 +1,19 @@
+{% extends 'base.html' %}
+
+
+{% block content %}
+<div class="delete-container">
+    <div class="delete-card">
+        <2>Видалити завдання</2>
+        <р>Ви впевнені, що хочете видалити це завдання "{{ object.name }}"?</p>
+
+        <form method="post">
+            {% csrf_token %}
+            <div class="delete-actions">
+                <button type="submit" class="btn-danger">Видалити</button>
+                <a href="{% url 'tracker_app:task_list' %}" class="btn-cancel">Відмінити</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
