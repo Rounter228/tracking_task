@@ -1,0 +1,249 @@
+{% extends 'base.html' %}
+
+{% block content %}
+{% load custom_tags %}
+<div class="container mt-4">
+    <div class="card shadow-sm border-0 mb-4">
+        <div class="card-header bg-white border-0 pb-0">
+            <div class="d-flex justify-content-between align-items-start">
+                <div>
+                    <h1 class="h2 mb-2 text-dark">{{ task.title }}</h1>
+                    <div class="d-flex flex-wrap gap-2 mb-3">
+                        <span class="badge bg-primary fs-6 py-2 px-3">
+                            <i class="fas fa-tasks me-1"></i>{{ task.status }}
+                        </span>
+                        <span class="badge bg-secondary fs-6 py-2 px-3">
+                            <i class="fas fa-flag me-1"></i>{{ task.priority }}
+                        </span>
+                    </div>
+                </div>
+                <div class="btn-group">
+                    <a href="{% url 'tasks:task-update' task.id %}" class="btn btn-warning">
+                        <i class="fas fa-edit me-1"></i>Редагувати
+                    </a>
+                    <a href="{% url 'tasks:task-delete' task.id %}" class="btn btn-danger">
+                        <i class="fas fa-trash me-1"></i>Видалити
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card-body">
+            <div class="mb-4">
+                <h5 class="text-muted mb-3"><i class="fas fa-align-left me-2"></i>Опис завдання</h5>
+                <div class="bg-light rounded-3 p-4">
+                    <p class="mb-0 fs-6">{{ task.description|linebreaksbr }}</p>
+                </div>
+            </div>
+
+            <div class="row text-muted small">
+                <div class="col-md-4">
+                    <i class="fas fa-user me-1"></i>
+                    <strong>Автор:</strong> {{ task.author.username }}
+                </div>
+                <div class="col-md-4">
+                    <i class="fas fa-calendar-plus me-1"></i>
+                    <strong>Створено:</strong> {{ task.created_at|date:"d.m.Y H:i" }}
+                </div>
+                {% if task.updated_at %}
+                <div class="col-md-4">
+                    <i class="fas fa-calendar-check me-1"></i>
+                    <strong>Оновлено:</strong> {{ task.updated_at|date:"d.m.Y H:i" }}
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-white border-0">
+                    <h3 class="h4 mb-0">
+                        <i class="fas fa-comments me-2 text-primary"></i>
+                        Коментарі
+                        <span class="badge bg-primary ms-2">{{ task.comments.count }}</span>
+                    </h3>
+                </div>
+                
+                <div class="card-body">
+                    {% for comment in task.comments.all %}
+                    <div class="comment-card border-start border-3 border-primary ps-3 mb-4">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <div class="d-flex align-items-center">
+                                <div class="user-avatar bg-primary text-white rounded-circle d-flex align-items-center justify-content-center me-2" 
+                                     style="width: 32px; height: 32px; font-size: 14px;">
+                                    {{ comment.author.username|first|upper }}
+                                </div>
+                                <div>
+                                    <strong class="d-block">{{ comment.author.username }}</strong>
+                                    <small class="text-muted">{{ comment.created_at|date:"d.m.Y H:i" }}</small>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <p class="mb-3">{{ comment.content }}</p>
+                        
+                        {% if comment.media %}
+                        <div class="comment-media mb-3">
+                            {% if comment.media.url|endswith:".jpg" or comment.media.url|endswith:".png" or comment.media.url|endswith:".jpeg" %}
+                                <img src="{{ comment.media.url }}" alt="Зображення коментаря" class="rounded-3 shadow-sm" style="max-width: 400px; height: auto;">
+                            {% elif comment.media.url|endswith:".mp4" %}
+                                <div class="ratio ratio-16x9" style="max-width: 400px;">
+                                    <video controls class="rounded-3 shadow-sm">
+                                        <source src="{{ comment.media.url }}" type="video/mp4">
+                                        Ваш браузер не підтримує відео тег.
+                                    </video>
+                                </div>
+                            {% else %}
+                                <a href="{{ comment.media.url }}" class="btn btn-outline-primary btn-sm">
+                                    <i class="fas fa-download me-1"></i>Завантажити файл
+                                </a>
+                            {% endif %}
+                        </div>
+                        {% endif %}
+                        
+                        <form action="{% url 'tasks:comment-like-toggle' comment.id %}" method="post" class="d-inline">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-sm {% if request.user in comment.likes.all %}btn-success{% else %}btn-outline-success{% endif %}">
+                                <i class="fas fa-heart me-1"></i>
+                                Лайк <span class="badge bg-white text-dark ms-1">{{ comment.likes.count }}</span>
+                            </button>
+                        </form>
+                    </div>
+                    {% empty %}
+                    <div class="text-center py-4">
+                        <i class="fas fa-comment-slash fa-3x text-muted mb-3"></i>
+                        <p class="text-muted">Коментарі відсутні. Будьте першим!</p>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-4">
+            <div class="card shadow-sm border-0 sticky-top" style="top: 20px;">
+                <div class="card-header bg-primary text-white border-0">
+                    <h4 class="h5 mb-0">
+                        <i class="fas fa-plus-circle me-2"></i>
+                        Додати коментар
+                    </h4>
+                </div>
+                
+                <div class="card-body">
+                    <form action="{% url 'tasks:task-detail' task.id %}" method="post" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        
+                        {% for field in comment_form %}
+                        <div class="mb-3">
+                            <label for="{{ field.id_for_label }}" class="form-label fw-semibold">
+                                {{ field.label }}
+                                {% if field.field.required %}
+                                    <span class="text-danger">*</span>
+                                {% endif %}
+                            </label>
+                            {{ field }}
+                            {% if field.help_text %}
+                            <div class="form-text">{{ field.help_text }}</div>
+                            {% endif %}
+                            {% if field.errors %}
+                            <div class="text-danger small mt-1">
+                                {{ field.errors.0 }}
+                            </div>
+                            {% endif %}
+                        </div>
+                        {% endfor %}
+                        
+                        <button type="submit" class="btn btn-primary w-100 py-2">
+                            <i class="fas fa-paper-plane me-1"></i>Відправити
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .card {
+        border-radius: 12px;
+    }
+    
+    .badge {
+        border-radius: 8px;
+        font-weight: 500;
+    }
+    
+    .btn {
+        border-radius: 8px;
+        font-weight: 500;
+        transition: all 0.3s ease;
+    }
+    
+    .btn-warning {
+        background: linear-gradient(135deg, #ffc107, #e0a800);
+        border: none;
+        color: white;
+    }
+    
+    .btn-warning:hover {
+        background: linear-gradient(135deg, #e0a800, #c69500);
+        transform: translateY(-1px);
+    }
+    
+    .comment-card {
+        background: #f8f9fa;
+        border-radius: 8px;
+        padding: 1rem;
+        margin-bottom: 1rem;
+    }
+    
+    .user-avatar {
+        font-weight: 600;
+    }
+    
+    .form-control {
+        border-radius: 8px;
+        border: 2px solid #e9ecef;
+        padding: 10px 12px;
+        transition: all 0.3s ease;
+    }
+    
+    .form-control:focus {
+        border-color: #0d6efd;
+        box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.15);
+    }
+    
+    textarea.form-control {
+        min-height: 120px;
+        resize: vertical;
+    }
+    
+    .sticky-top {
+        position: sticky;
+        z-index: 10;
+    }
+    
+    @media (max-width: 991.98px) {
+        .sticky-top {
+            position: static;
+        }
+    }
+</style>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const formFields = document.querySelectorAll('.add-comment input, .add-comment textarea, .add-comment select');
+        formFields.forEach(field => {
+            if (field.type !== 'checkbox') {
+                field.classList.add('form-control');
+            }
+        });
+        
+        const contentField = document.querySelector('textarea[name="content"]');
+        if (contentField) {
+            contentField.placeholder = 'Напишіть ваш коментар тут...';
+        }
+    });
+</script>
+{% endblock %}

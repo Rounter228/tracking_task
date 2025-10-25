@@ -1,0 +1,255 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-6">
+            <div class="card shadow-lg border-0 rounded-3">
+                <div class="card-header bg-gradient-primary text-white text-center py-4 rounded-top-3">
+                    <i class="fas fa-edit fa-2x mb-3"></i>
+                    <h1 class="h3 fw-bold mb-0">{{ view.title }}</h1>
+                    <p class="mb-0 opacity-75">Заповніть необхідну інформацію</p>
+                </div>
+                
+                <div class="card-body p-4 p-md-5">
+                    <form method="post" class="needs-validation" novalidate>
+                        {% csrf_token %}
+                        
+                        {% if form.non_field_errors %}
+                        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                            <i class="fas fa-exclamation-triangle me-2"></i>
+                            <strong>Помилки в формі:</strong>
+                            <ul class="mb-0 mt-2">
+                                {% for error in form.non_field_errors %}
+                                    <li>{{ error }}</li>
+                                {% endfor %}
+                            </ul>
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                        {% endif %}
+                        
+                        {% for field in form %}
+                        <div class="mb-4">
+                            <label for="{{ field.id_for_label }}" class="form-label fw-semibold">
+                                {% if field.name == 'title' %}
+                                    <i class="fas fa-heading me-2 text-primary"></i>
+                                {% elif field.name == 'description' %}
+                                    <i class="fas fa-align-left me-2 text-primary"></i>
+                                {% elif field.name == 'status' %}
+                                    <i class="fas fa-tasks me-2 text-primary"></i>
+                                {% elif field.name == 'priority' %}
+                                    <i class="fas fa-flag me-2 text-primary"></i>
+                                {% elif field.name == 'due_date' %}
+                                    <i class="fas fa-calendar-day me-2 text-primary"></i>
+                                {% else %}
+                                    <i class="fas fa-pen me-2 text-primary"></i>
+                                {% endif %}
+                                {{ field.label }}
+                                {% if field.field.required %}
+                                    <span class="text-danger">*</span>
+                                {% endif %}
+                            </label>
+                            
+                            {{ field }}
+                            
+                            {% if field.errors %}
+                            <div class="text-danger small mt-2">
+                                <i class="fas fa-exclamation-circle me-1"></i>
+                                {% for error in field.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                            
+                            {% if field.help_text %}
+                            <div class="form-text text-muted mt-1">
+                                <i class="fas fa-info-circle me-1"></i>
+                                {{ field.help_text }}
+                            </div>
+                            {% endif %}
+                        </div>
+                        {% endfor %}
+                        
+                        <div class="d-flex justify-content-between align-items-center pt-3">
+                            <a href="{% url 'tasks:task-list' %}" class="btn btn-outline-secondary">
+                                <i class="fas fa-arrow-left me-1"></i> Скасувати
+                            </a>
+                            <button type="submit" class="btn btn-success px-4 py-2">
+                                <i class="fas fa-save me-1"></i> Зберегти
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .card {
+        border: none;
+    }
+    
+    .card-header {
+        border-bottom: 1px solid rgba(255,255,255,0.1);
+    }
+    
+    .bg-gradient-primary {
+        background: linear-gradient(135deg, #0d6efd 0%, #0a58ca 100%);
+    }
+    
+    .form-control, .form-select, textarea {
+        border-radius: 8px;
+        padding: 12px 16px;
+        border: 2px solid #e9ecef;
+        transition: all 0.3s ease;
+        width: 100%;
+    }
+    
+    .form-control:focus, .form-select:focus, textarea:focus {
+        border-color: #0d6efd;
+        box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.15);
+    }
+    
+    textarea {
+        min-height: 120px;
+        resize: vertical;
+    }
+    
+    .btn {
+        border-radius: 8px;
+        font-weight: 500;
+        transition: all 0.3s ease;
+        padding: 10px 24px;
+    }
+    
+    .btn-success {
+        background: linear-gradient(135deg, #198754, #146c43);
+        border: none;
+        box-shadow: 0 4px 15px rgba(25, 135, 84, 0.3);
+    }
+    
+    .btn-success:hover {
+        background: linear-gradient(135deg, #146c43, #0f5132);
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(25, 135, 84, 0.4);
+    }
+    
+    .btn-outline-secondary {
+        border: 2px solid #6c757d;
+        color: #6c757d;
+    }
+    
+    .btn-outline-secondary:hover {
+        background-color: #6c757d;
+        border-color: #6c757d;
+        color: white;
+        transform: translateY(-1px);
+    }
+    
+    .form-label {
+        color: #495057;
+        margin-bottom: 8px;
+        font-size: 1rem;
+    }
+    
+    .alert {
+        border-radius: 8px;
+        border: none;
+    }
+    
+    .form-check-input {
+        width: 1.2em;
+        height: 1.2em;
+        margin-top: 0.15em;
+    }
+    
+    .form-check-input:checked {
+        background-color: #198754;
+        border-color: #198754;
+    }
+    
+    .form-check-label {
+        margin-left: 0.5em;
+    }
+    
+    .card {
+        opacity: 0;
+        transform: translateY(20px);
+        animation: fadeInUp 0.6s ease forwards;
+    }
+    
+    @keyframes fadeInUp {
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+</style>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const form = document.querySelector('form');
+        if (form) {
+            const inputFields = form.querySelectorAll('input[type="text"], input[type="email"], input[type="number"], input[type="date"], input[type="url"]');
+            inputFields.forEach(field => {
+                field.classList.add('form-control');
+                if (field.name === 'title') {
+                    field.placeholder = 'Введіть назву завдання...';
+                }
+            });
+            
+            const passwordFields = form.querySelectorAll('input[type="password"]');
+            passwordFields.forEach(field => {
+                field.classList.add('form-control');
+            });
+            
+            const selectFields = form.querySelectorAll('select');
+            selectFields.forEach(field => {
+                field.classList.add('form-select');
+            });
+            
+            const textareas = form.querySelectorAll('textarea');
+            textareas.forEach(field => {
+                field.classList.add('form-control');
+                if (field.name === 'description') {
+                    field.placeholder = 'Опишіть деталі завдання...';
+                }
+            });
+            
+            const checkboxes = form.querySelectorAll('input[type="checkbox"]');
+            checkboxes.forEach(field => {
+                field.classList.add('form-check-input');
+                const parent = field.parentElement;
+                if (parent && !parent.classList.contains('form-check')) {
+                    parent.classList.add('form-check');
+                    const label = parent.querySelector('label');
+                    if (label) label.classList.add('form-check-label');
+                }
+            });
+            
+            const radios = form.querySelectorAll('input[type="radio"]');
+            radios.forEach(field => {
+                field.classList.add('form-check-input');
+                const parent = field.parentElement;
+                if (parent && !parent.classList.contains('form-check')) {
+                    parent.classList.add('form-check');
+                    const label = parent.querySelector('label');
+                    if (label) label.classList.add('form-check-label');
+                }
+            });
+        }
+        
+        const forms = document.querySelector('.needs-validation');
+        if (forms) {
+            forms.addEventListener('submit', function(event) {
+                if (!forms.checkValidity()) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                }
+                forms.classList.add('was-validated');
+            }, false);
+        }
+    });
+</script>
+{% endblock %}
